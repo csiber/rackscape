@@ -429,32 +429,37 @@ function StateLights({ rack, hovered, selected }: { rack: RackLayout; hovered: b
   )
 }
 
+/** Rotating warning beacon: a glowing dome plus a red spot that sweeps the room. */
 function Beacon({ rack }: { rack: RackLayout }) {
   const { alarm } = useRackState(rack)
   const spin = useRef<THREE.Group>(null!)
-  const light = useRef<THREE.PointLight>(null!)
-  const cone = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.1, 0.05).multiplyScalar(1.5), transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }),
-    [],
-  )
+  const spot = useRef<THREE.SpotLight>(null!)
+  const glow = useRef<THREE.PointLight>(null!)
+  const target = useMemo(() => new THREE.Object3D(), [])
   useFrame(({ clock }, dt) => {
     if (!alarm) return
-    spin.current.rotation.y += dt * 5
-    light.current.intensity = 2.5 + Math.sin(clock.elapsedTime * 10) * 1.5
+    spin.current.rotation.y += dt * 4.5
+    glow.current.intensity = 1.2 + Math.sin(clock.elapsedTime * 9) * 0.6
   })
+  useLayoutEffect(() => {
+    if (spot.current) spot.current.target = target
+  }, [alarm, target])
   if (!alarm) return null
   return (
     <group position={[RACK_W / 2 - 0.08, rack.height, RACK_D / 2 - 0.1]}>
       <mesh position={[0, 0.03, 0]}>
-        <cylinderGeometry args={[0.025, 0.03, 0.06, 16]} />
+        <sphereGeometry args={[0.03, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshBasicMaterial color={new THREE.Color(1, 0.1, 0.05).multiplyScalar(4)} toneMapped={false} />
       </mesh>
-      <group ref={spin} position={[0, 0.035, 0]}>
-        <mesh material={cone} position={[0.35, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <coneGeometry args={[0.12, 0.7, 24, 1, true]} />
-        </mesh>
+      <mesh position={[0, 0.005, 0]}>
+        <cylinderGeometry args={[0.034, 0.036, 0.012, 16]} />
+        <meshStandardMaterial color="#1a1c21" metalness={0.6} roughness={0.5} />
+      </mesh>
+      <group ref={spin} position={[0, 0.04, 0]}>
+        <primitive object={target} position={[2.5, -1.6, 0]} />
+        <spotLight ref={spot} color="#ff2a18" intensity={40} angle={0.32} penumbra={0.6} distance={7} decay={1.5} />
       </group>
-      <pointLight ref={light} color="#ff2a18" distance={3.5} decay={1.6} />
+      <pointLight ref={glow} color="#ff2a18" distance={1.6} decay={2} position={[0, 0.08, 0]} />
     </group>
   )
 }
