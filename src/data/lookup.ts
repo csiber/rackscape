@@ -32,7 +32,8 @@ export function fmtRate(b: number) {
 
 export function fmtBytes(b: number) {
   if (b < 1024 ** 3) return `${(b / 1024 ** 2).toFixed(0)} MB`
-  return `${(b / 1024 ** 3).toFixed(1)} GB`
+  if (b < 1024 ** 4) return `${(b / 1024 ** 3).toFixed(1)} GB`
+  return `${(b / 1024 ** 4).toFixed(1)} TB`
 }
 
 /** 0..1 activity from a byte rate, log-scaled so 1 KB/s and 1 GB/s both read */

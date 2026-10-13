@@ -41,6 +41,8 @@ export interface Node {
   netOut: number
   temp?: number // °C
   uptime: number // s
+  /** storage appliances (NAS, PBS, shared pools): used / total bytes */
+  capacity?: { used: number; total: number }
   guests: Guest[]
   disks: Disk[]
 }

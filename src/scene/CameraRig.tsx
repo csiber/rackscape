@@ -33,17 +33,17 @@ const FREEZE = params.get('shot')
 const FREEZE_P = Number(params.get('p') ?? 0.5)
 
 function rackCaption(r: RackLayout) {
-  const n = r.nodeId ? lookup(snap()).nodes.get(r.nodeId) : null
-  if (!n) return 'network · core switching'
+  const ns = r.nodeIds.map((id) => lookup(snap()).nodes.get(id)).filter((n) => !!n)
+  if (!ns.length) return 'network · core switching'
+  if (ns.length > 1 || ns[0].kind === 'storage') return `storage · ${ns.map((n) => n.name).join(' · ')}`
+  const n = ns[0]
   const run = n.guests.filter((g) => g.status === 'running').length
-  return n.kind === 'storage'
-    ? `${n.name} · ${n.disks.length} drives`
-    : `${n.name} · ${run}/${n.guests.length} guests · ${Math.round(n.cpu * 100)}% cpu`
+  return `${n.name} · ${run}/${n.guests.length} guests · ${Math.round(n.cpu * 100)}% cpu`
 }
 
 function busiest(racks: RackLayout[]) {
   const L = lookup(snap())
-  return [...racks].sort((a, b) => (L.nodes.get(b.nodeId ?? '')?.cpu ?? -1) - (L.nodes.get(a.nodeId ?? '')?.cpu ?? -1))[0]
+  return [...racks].sort((a, b) => (L.nodes.get(b.nodeIds[0] ?? '')?.cpu ?? -1) - (L.nodes.get(a.nodeIds[0] ?? '')?.cpu ?? -1))[0]
 }
 
 /** camera z in front of a rack, accounting for its facing */
@@ -64,7 +64,7 @@ function makeShots(racks: RackLayout[], alarmRack: RackLayout | null): Shot[] {
         name: 'alarm',
         dur: 7,
         fov: 34,
-        caption: `⚠ ${useStore.getState().alarms.find((a) => a.nodeId === r.nodeId)?.message ?? 'alarm'}`,
+        caption: `⚠ ${useStore.getState().alarms.find((a) => r.nodeIds.includes(a.nodeId))?.message ?? 'alarm'}`,
         at: (p, pos, look) => {
           pos.set(x + lerp(0.9, 0.35, p), r.focusY + lerp(0.5, 0.2, p), front(r, lerp(1.9, 1.05, p)))
           look.set(x, r.focusY, r.position[2])
@@ -188,7 +188,7 @@ export function CameraRig({ racks }: { racks: RackLayout[] }) {
   useEffect(() => {
     const s = state.current
     if (alarmIds && alarmIds !== s.seenAlarms && mode === 'cinematic' && !FREEZE) {
-      const r = racks.find((x) => alarmIds.split(',').includes(x.nodeId ?? ''))
+      const r = racks.find((x) => x.nodeIds.some((id) => alarmIds.split(',').includes(id)))
       if (r) {
         s.shots = [...makeShots(racks, r), ...makeShots(racks, null)]
         s.i = 0

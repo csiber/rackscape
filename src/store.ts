@@ -11,6 +11,8 @@ interface State {
   selected: string | null // rack id or unit id
   mode: CameraMode
   tv: boolean // hide all UI
+  source: 'demo' | 'api' | null
+  setSource: (s: 'demo' | 'api') => void
   setSnap: (s: Snapshot) => void
   select: (id: string | null) => void
   setMode: (m: CameraMode) => void
@@ -47,6 +49,8 @@ export const useStore = create<State>((set, get) => ({
   selected: null,
   mode: 'cinematic',
   tv: false,
+  source: null,
+  setSource: (source) => set({ source }),
   setSnap: (snap) => {
     const key = structureOf(snap)
     const alarms = alarmsOf(snap, get().alarms)

@@ -24,7 +24,8 @@ export interface RackUnit {
 export interface RackLayout {
   id: string
   title: string
-  nodeId?: string
+  /** snapshot nodes housed in this rack (empty for the network rack) */
+  nodeIds: string[]
   position: [number, number, number]
   rotationY: number
   units: RackUnit[]
@@ -56,10 +57,10 @@ function focusOf(units: RackUnit[]) {
 type Draft = Omit<RackLayout, 'position' | 'rotationY' | 'size' | 'height' | 'focusY'>
 
 export function computeLayout(s: Snapshot): RackLayout[] {
-  // 1. hypervisor / storage racks, packed bottom-up
+  // 1. one rack per hypervisor, packed bottom-up; storage appliances share a rack
   const nodeRacks: Draft[] = []
   let maxUsed = 0
-  for (const n of s.nodes) {
+  for (const n of s.nodes.filter((n) => n.kind === 'hypervisor')) {
     const units: RackUnit[] = []
     let u = 2
     units.push({ id: `${n.id}/ups`, kind: 'ups', u: 0, h: 2, label: 'UPS' })
@@ -77,7 +78,23 @@ export function computeLayout(s: Snapshot): RackLayout[] {
       u += h
     }
     maxUsed = Math.max(maxUsed, u)
-    nodeRacks.push({ id: n.id, title: n.name, nodeId: n.id, units })
+    nodeRacks.push({ id: n.id, title: n.name, nodeIds: [n.id], units })
+  }
+  const appliances = s.nodes.filter((n) => n.kind === 'storage')
+  if (appliances.length) {
+    const units: RackUnit[] = [{ id: 'storage/ups', kind: 'ups', u: 0, h: 2, label: 'UPS' }]
+    let u = 3
+    for (const n of appliances) {
+      if (n.disks.length) {
+        const h = Math.max(1, Math.ceil(n.disks.length / 4))
+        units.push({ id: `${n.id}/disks`, kind: 'disks', u, h, label: `${n.name} drives`, ref: n.id })
+        u += h
+      }
+      units.push({ id: `${n.id}/host`, kind: 'host', u, h: 2, label: n.name, ref: n.id })
+      u += 3
+    }
+    maxUsed = Math.max(maxUsed, u)
+    nodeRacks.push({ id: 'storage', title: 'storage', nodeIds: appliances.map((n) => n.id), units })
   }
   const size = SIZES.find((x) => x >= maxUsed + 3) ?? SIZES[SIZES.length - 1]
   for (const r of nodeRacks) {
@@ -100,7 +117,7 @@ export function computeLayout(s: Snapshot): RackLayout[] {
     }
     units.push({ id: 'net/ups', kind: 'ups', u: 0, h: 2, label: 'UPS' })
     fillBlanks(units, 'net', size)
-    racks.push({ id: 'net', title: 'network', units })
+    racks.push({ id: 'net', title: 'network', nodeIds: [], units })
   }
   racks.push(...nodeRacks)
 

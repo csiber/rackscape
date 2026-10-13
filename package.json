@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node server/index.mjs",
+    "test": "node --test server/test/",
+    "start": "npm run build && npm run server"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
@@ -28,5 +31,7 @@
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
-  }
+  },
+  "description": "Cinematic live 3D server room for your homelab",
+  "license": "MIT"
 }

@@ -224,9 +224,12 @@ function GuestUnit({ u }: { u: RackUnit }) {
 
 function HostUnit({ u }: { u: RackUnit }) {
   const y = unitY(u.u, u.h)
-  const get = (k: 'cpu' | 'mem') => () => {
-    const n = lookup(snap()).nodes.get(u.ref!)
+  const node = () => lookup(snap()).nodes.get(u.ref!)
+  const appliance = !!node()?.capacity
+  const get = (k: 'cpu' | 'mem' | 'used') => () => {
+    const n = node()
     if (!n) return 0
+    if (k === 'used') return n.capacity ? n.capacity.used / Math.max(1, n.capacity.total) : 0
     return k === 'cpu' ? n.cpu : n.mem / Math.max(1, n.maxmem)
   }
   return (
@@ -235,11 +238,20 @@ function HostUnit({ u }: { u: RackUnit }) {
       {[-1, 1].map((s) => (
         <mesh key={s} geometry={box} material={M.handle} position={[s * (INNER_W / 2 - 0.006), y, FZ + 0.012]} scale={[0.006, u.h * U * 0.7, 0.02]} />
       ))}
-      <Label text={u.label.toUpperCase()} x={LX + 0.02} y={y + 0.01} size={0.02} color="#d7e1ee" />
-      <Label text="CPU" x={0.055} y={y + 0.012} size={0.008} />
-      <Label text="MEM" x={0.055} y={y - 0.006} size={0.008} />
-      <Bar y={y + 0.012} x0={0.085} w={0.12} get={get('cpu')} />
-      <Bar y={y - 0.006} x0={0.085} w={0.12} get={get('mem')} />
+      <Label text={u.label.toUpperCase()} x={LX + 0.02} y={y + 0.01} size={appliance ? 0.016 : 0.02} color="#d7e1ee" />
+      {appliance ? (
+        <>
+          <Label text="USED" x={0.05} y={y + 0.012} size={0.008} />
+          <Bar y={y + 0.012} x0={0.085} w={0.12} get={get('used')} />
+        </>
+      ) : (
+        <>
+          <Label text="CPU" x={0.055} y={y + 0.012} size={0.008} />
+          <Label text="MEM" x={0.055} y={y - 0.006} size={0.008} />
+          <Bar y={y + 0.012} x0={0.085} w={0.12} get={get('cpu')} />
+          <Bar y={y - 0.006} x0={0.085} w={0.12} get={get('mem')} />
+        </>
+      )}
       {/* fan grille */}
       {Array.from({ length: 5 }, (_, i) => (
         <mesh key={i} geometry={box} material={M.port} position={[-0.07 + i * 0.024, y - 0.02, FZ + 0.0008]} scale={[0.018, 0.012, 0.001]} />
@@ -370,14 +382,17 @@ function Cabinet({ h, size }: { h: number; size: number }) {
 // ---------------------------------------------------------------- state lights
 
 function useRackState(rack: RackLayout) {
-  const alarm = useStore((s) => (rack.nodeId ? s.alarms.some((a) => a.nodeId === rack.nodeId) : false))
+  const alarm = useStore((s) => s.alarms.some((a) => rack.nodeIds.includes(a.nodeId)))
   return { alarm }
 }
 
 function rackLoad(rack: RackLayout) {
   const s = snap()
   if (!s) return 0
-  if (rack.nodeId) return lookup(s).nodes.get(rack.nodeId)?.cpu ?? 0
+  if (rack.nodeIds.length) {
+    const ns = rack.nodeIds.map((id) => lookup(s).nodes.get(id)).filter((n) => !!n)
+    return Math.max(0, ...ns.map((n) => (n.capacity ? n.capacity.used / Math.max(1, n.capacity.total) : n.cpu)))
+  }
   const sum = s.network.reduce((a, d) => a + d.ports.reduce((b, p) => b + p.rate, 0), 0)
   return activity(sum) * 0.8
 }

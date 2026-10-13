@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { overlay } from '../scene/CameraRig'
 import { fmtBytes, fmtRate, lookup } from '../data/lookup'
-import { SOURCE } from '../data/source'
 
 function useTick(ms: number) {
   const [, set] = useState(0)
@@ -25,7 +24,7 @@ function Stats() {
   return (
     <div className="stats">
       <div>
-        <b>{s.nodes.length}</b> nodes
+        <b>{hv.length}</b> {hv.length === 1 ? 'node' : 'nodes'}
       </div>
       <div>
         <b>
@@ -39,7 +38,7 @@ function Stats() {
       <div>
         <b>{fmtRate(traffic)}</b>
       </div>
-      {SOURCE === 'demo' && <div className="pill">demo data</div>}
+      {useStore.getState().source === 'demo' && <div className="pill">demo data</div>}
       {stale && <div className="pill warn">stale</div>}
     </div>
   )
@@ -122,6 +121,20 @@ function Details() {
               ))}
             </div>
           )}
+        </>
+      ) : selected === 'storage' ? (
+        <>
+          <h2>storage</h2>
+          {s.nodes
+            .filter((x) => x.kind === 'storage')
+            .map((x) => (
+              <div key={x.id} className="kv">
+                <span>{x.name}</span>
+                <b className={x.status === 'online' ? '' : 'bad'}>
+                  {x.capacity ? `${fmtBytes(x.capacity.used)} / ${fmtBytes(x.capacity.total)}` : x.status}
+                </b>
+              </div>
+            ))}
         </>
       ) : (
         <>

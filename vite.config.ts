@@ -1,7 +1,11 @@
-import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
+// In dev, /api is proxied to the Rackscape server (npm run server) when it runs.
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: { '/api': { target: 'http://127.0.0.1:8080', changeOrigin: false } },
+  },
+  build: { chunkSizeWarningLimit: 1600 },
 })

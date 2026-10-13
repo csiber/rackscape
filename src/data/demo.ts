@@ -121,6 +121,7 @@ function node(id: string, kind: Node['kind'], gs: Guest[], ds: Disk[], maxcpu: n
     uptime: 86400 * 23 + t,
     guests: gs,
     disks: ds,
+    ...(kind === 'storage' ? { capacity: { used: 21.4e12 + wobble(t * 0.01, 3) * 1e11, total: 48e12 } } : {}),
   }
 }
 

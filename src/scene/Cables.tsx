@@ -33,7 +33,7 @@ function buildCables(racks: RackLayout[]): Cable[] {
   const cables: Cable[] = []
   const TRAY_Y = trayY(racks)
   const RACK_H = net.height
-  const nodes = racks.filter((r) => r.nodeId)
+  const nodes = racks.filter((r) => r.nodeIds.length)
   nodes.forEach((r, i) => {
     const off = (i - (nodes.length - 1) / 2) * 0.03
     const a = toWorld(r, 0.1, RACK_H, -0.3)
@@ -46,13 +46,19 @@ function buildCables(racks: RackLayout[]): Cable[] {
     for (let k = 1; k < steps; k++) pts.push(new THREE.Vector3(a.x + ((b.x - a.x) * k) / steps, TRAY_Y + 0.01, nz))
     pts.push(new THREE.Vector3(b.x, TRAY_Y + 0.01, nz), new THREE.Vector3(b.x, TRAY_Y - 0.05, b.z), b)
     const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.08)
-    const id = r.nodeId!
+    const ids = r.nodeIds
     cables.push({
       curve,
       length: curve.getLength(),
       rate: () => {
-        const n = lookup(snap()).nodes.get(id)
-        return n ? [n.netOut, n.netIn] : [0, 0] // a→b is upload, b→a download
+        const L = lookup(snap())
+        let up = 0
+        let down = 0
+        for (const id of ids) {
+          const n = L.nodes.get(id)
+          if (n) (up += n.netOut), (down += n.netIn)
+        }
+        return [up, down] // a→b is upload, b→a download
       },
     })
   })
