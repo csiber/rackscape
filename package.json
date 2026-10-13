@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "server": "node server/index.mjs",
-    "test": "node --test server/test/",
+    "test": "node --test server/test/*.test.mjs",
     "start": "npm run build && npm run server"
   },
   "dependencies": {
