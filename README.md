@@ -19,7 +19,7 @@ a red beacon spins up and the camera cuts to it.
 ![three.js](https://img.shields.io/badge/three.js-r186-000?logo=threedotjs&logoColor=white)
 ![Zero-dependency server](https://img.shields.io/badge/server-zero_dependencies-5ee08a)
 
-<img src="docs/media/rackscape.gif" alt="Rackscape cinematic autopilot" width="100%">
+<img src="docs/media/rackscape.webp" alt="Rackscape cinematic autopilot" width="100%">
 
 </div>
 
