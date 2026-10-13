@@ -31,6 +31,8 @@ const IDLE_RESUME = 40 // s
 const params = new URLSearchParams(location.search)
 const FREEZE = params.get('shot')
 const FREEZE_P = Number(params.get('p') ?? 0.5)
+// ?shots=floor,push-in,crane plays only these shots, in this order
+const ONLY = params.get('shots')?.split(',').filter(Boolean) ?? null
 
 function rackCaption(r: RackLayout) {
   const ns = r.nodeIds.map((id) => lookup(snap()).nodes.get(id)).filter((n) => !!n)
@@ -146,7 +148,16 @@ function makeShots(racks: RackLayout[], alarmRack: RackLayout | null): Shot[] {
       },
     },
   ]
+  if (FREEZE === 'alarm') {
+    const ids = useStore.getState().alarms.map((a) => a.nodeId)
+    const r = racks.find((x) => x.nodeIds.some((id) => ids.includes(id)))
+    if (r) return makeShots(racks, r)
+  }
   if (FREEZE) return shots.filter((x) => x.name === FREEZE)
+  if (ONLY) {
+    const picked = ONLY.map((n) => shots.find((x) => x.name === n)).filter((x): x is Shot => !!x)
+    if (picked.length) return picked
+  }
   // shuffle all but the establishing shot so loops feel less canned
   const rest = shots.slice(1).sort(() => Math.random() - 0.5)
   return [shots[0], ...rest]
@@ -211,6 +222,7 @@ export function CameraRig({ racks }: { racks: RackLayout[] }) {
 
     if (mode === 'cinematic') {
       if (!s.shots.length) s.shots = makeShots(racks, null)
+      if (!s.shots.length) return // e.g. ?shot=alarm before any alarm exists
       let shot = s.shots[s.i]
       s.t = FREEZE ? FREEZE_P * shot.dur : s.t + dt
       if (s.t > shot.dur) {

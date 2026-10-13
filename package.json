@@ -1,7 +1,7 @@
 {
   "name": "rackscape",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -33,5 +33,13 @@
     "vite": "^8.3.0"
   },
   "description": "Cinematic live 3D server room for your homelab",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/csiber/rackscape.git"
+  },
+  "homepage": "https://csiber.github.io/rackscape/"
 }

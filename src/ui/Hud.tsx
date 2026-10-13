@@ -38,7 +38,11 @@ function Stats() {
       <div>
         <b>{fmtRate(traffic)}</b>
       </div>
-      {useStore.getState().source === 'demo' && <div className="pill">demo data</div>}
+      {useStore.getState().source === 'demo' && (
+        <a className="pill link" href="https://github.com/csiber/rackscape" target="_blank" rel="noopener">
+          demo data · get Rackscape on GitHub ↗
+        </a>
+      )}
       {stale && <div className="pill warn">stale</div>}
     </div>
   )

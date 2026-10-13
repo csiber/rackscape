@@ -48,7 +48,7 @@ export const useStore = create<State>((set, get) => ({
   alarms: [],
   selected: null,
   mode: 'cinematic',
-  tv: false,
+  tv: new URLSearchParams(location.search).has('tv'), // ?tv starts in wall-display mode
   source: null,
   setSource: (source) => set({ source }),
   setSnap: (snap) => {

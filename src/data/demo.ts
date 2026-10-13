@@ -64,6 +64,9 @@ const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v))
 
 // Crash schedule: one guest at a time goes down for a while.
 let crash: { id: string; until: number; next: number } = { id: '', until: 0, next: 150 } // t starts at 120
+// ?crash=pve-02/lxc/204 keeps one guest down (screenshots, docs)
+const forced = new URLSearchParams(location.search).get('crash')
+if (forced) crash = { id: forced, until: Infinity, next: Infinity }
 
 function guests(node: string, seeds: GuestSeed[], firstId: number, t: number): Guest[] {
   return seeds.map((g, i) => {

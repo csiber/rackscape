@@ -1,0 +1,36 @@
+name: Bug report
+description: Something looks or behaves wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: A screenshot or short screen recording helps a lot with visual bugs.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: input
+    id: version
+    attributes:
+      label: Rackscape version / commit
+      placeholder: e.g. ghcr.io/csiber/rackscape:latest, or a commit hash
+  - type: dropdown
+    id: source
+    attributes:
+      label: Data source
+      options: [Demo, Proxmox VE, Other]
+  - type: input
+    id: env
+    attributes:
+      label: Browser, OS and GPU
+      placeholder: e.g. Firefox 131, Windows 11, RTX 3060
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log / browser console
+      description: Please remove hostnames and tokens you don't want to share.
+      render: text

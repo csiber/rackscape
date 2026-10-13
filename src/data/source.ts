@@ -8,6 +8,9 @@ import { useStore } from '../store'
 //                    otherwise fall back to the built-in demo homelab
 //   ?source=demo   — always demo
 //   ?source=api    — always the server (shows "stale" if it is down)
+//   ?source=embed  — the parent page posts snapshots:
+//                    window.postMessage({ type: 'rackscape:snapshot', snapshot }, origin)
+//                    (same origin only — lets a host app add its own auth)
 
 const params = new URLSearchParams(location.search)
 const WANT = params.get('source') ?? import.meta.env.VITE_SOURCE ?? 'auto'
@@ -52,8 +55,17 @@ export function useDataSource() {
       timer = setTimeout(poll, 2000)
     }
 
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== location.origin || e.source !== window.parent) return
+      if (e.data?.type === 'rackscape:snapshot' && e.data.snapshot) setSnap(e.data.snapshot as Snapshot)
+    }
+
     if (WANT === 'demo') demo()
-    else
+    else if (WANT === 'embed') {
+      setSource('api')
+      addEventListener('message', onMessage)
+      window.parent.postMessage({ type: 'rackscape:ready' }, location.origin)
+    } else
       fetchSnapshot().then((s) => {
         if (stop) return
         if (s || WANT === 'api') api(s)
@@ -63,6 +75,7 @@ export function useDataSource() {
     return () => {
       stop = true
       clearTimeout(timer)
+      removeEventListener('message', onMessage)
     }
   }, [setSnap, setSource])
 }

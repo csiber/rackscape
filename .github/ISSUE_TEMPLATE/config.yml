@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security issue
+    url: https://github.com/csiber/rackscape/blob/main/SECURITY.md
+    about: Please report vulnerabilities privately, not as a public issue.
+  - name: Questions & show your setup
+    url: https://github.com/csiber/rackscape/discussions
+    about: Ask questions or share a screenshot of your Rackscape.
